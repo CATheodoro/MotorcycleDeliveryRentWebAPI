@@ -33,7 +33,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
             return NotFound($"Rent with Id = {id} not found");
         }
 
-        [HttpGet("{driverId}")]
+        [HttpGet("Driver/{driverId}")]
         public ActionResult<List<RentDTO>> GetByDriverId(string driverId)
         {
             List<RentDTO> dto = _rentService.GetByDriverId(driverId);

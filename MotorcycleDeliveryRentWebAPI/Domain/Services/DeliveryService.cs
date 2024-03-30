@@ -83,7 +83,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             _notificationService.PublishDeliveryAcceptance(delivery.Id, driver.Id);
             _driverService.UpdateStatus(driver.Id, DriverStatusEnum.Unavailable);
 
-            delivery = DeliveryRequest.ConvertAccept(delivery, DateTime.UtcNow, DeliveryStatusEnum.Accepted);
+            delivery = DeliveryRequest.ConvertAccept(delivery, driver.Id, DateTime.UtcNow, DeliveryStatusEnum.Accepted);
             _context.ReplaceOne(x => x.Id == id, delivery);
             return true;
         }
@@ -113,21 +113,28 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
             AdminModel admin = _adminService.GetByEmailModel(email);
 
-            DeliveryModel delivery = GetByIdModel(id);
-            if (delivery.AdminId != admin.Id)
+            DeliveryModel model = GetByIdModel(id);
+            if (model.AdminId != admin.Id)
             {
                 _logger.LogError("Different users");
                 throw new Exception("Different users");
             }
-            if (delivery.Status != DeliveryStatusEnum.Delivered)
+            if (model.Status != DeliveryStatusEnum.Delivered)
             {
                 _logger.LogError("Cannot cancel finished race");
                 throw new Exception("Cannot cancel finished race");
             }
 
-            _driverService.UpdateStatus(delivery.DriverId, DriverStatusEnum.Available);
-            delivery = DeliveryRequest.ConvertDelivery(delivery, DateTime.UtcNow, DeliveryStatusEnum.Canceled);
-            _context.ReplaceOne(x => x.Id == id, delivery);
+            _driverService.UpdateStatus(model.DriverId, DriverStatusEnum.Available);
+
+            if (model.Status == DeliveryStatusEnum.Delivered || model.Status == DeliveryStatusEnum.Canceled)
+            {
+                _logger.LogInformation("A race has already ended or been canceled");
+                return false;
+            }
+            
+            model = DeliveryRequest.ConvertDelivery(model, DateTime.UtcNow, DeliveryStatusEnum.Canceled);
+            _context.ReplaceOne(x => x.Id == id, model);
             return true;
         }
 

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotorcycleDeliveryRentWebAPI", "MotorcycleDeliveryRentWebAPI\MotorcycleDeliveryRentWebAPI.csproj", "{EE23EA67-0FF6-49DD-908B-89C75E6CC4AA}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{7405F6F3-F513-4B32-BD54-CE0A52D568A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{EE23EA67-0FF6-49DD-908B-89C75E6CC4AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE23EA67-0FF6-49DD-908B-89C75E6CC4AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE23EA67-0FF6-49DD-908B-89C75E6CC4AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7405F6F3-F513-4B32-BD54-CE0A52D568A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7405F6F3-F513-4B32-BD54-CE0A52D568A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7405F6F3-F513-4B32-BD54-CE0A52D568A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7405F6F3-F513-4B32-BD54-CE0A52D568A7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

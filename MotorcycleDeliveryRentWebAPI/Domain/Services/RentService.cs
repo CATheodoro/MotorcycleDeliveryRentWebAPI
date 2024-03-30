@@ -87,7 +87,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
         {
             RentModel rent = GetByIdModel(id);
 
-            if (rent.TotalPrice != null)
+            if (rent.TotalPrice != 0)
             {
                 _logger.LogError("Operation has already been completed, cannot be updated");
                 throw new Exception("Operation has already been completed, cannot be updated");

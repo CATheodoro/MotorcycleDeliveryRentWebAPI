@@ -24,8 +24,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Requests
             return model;
         }
 
-        internal static DeliveryModel ConvertAccept(DeliveryModel model, DateTime acceptDate, DeliveryStatusEnum status)
+        internal static DeliveryModel ConvertAccept(DeliveryModel model, string driverId, DateTime acceptDate, DeliveryStatusEnum status)
         {
+            model.DriverId = driverId;
             model.AcceptDate = acceptDate;
             model.Status = status;
             return model;

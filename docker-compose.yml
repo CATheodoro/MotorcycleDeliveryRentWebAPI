@@ -1,7 +1,15 @@
-﻿version: '3.7'
+version: '3.4'
 
 services:
-  
+  motorcycledeliveryrentwebapi:
+    image: ${DOCKER_REGISTRY-}motorcycledeliveryrentwebapi
+    build:
+      context: .
+      dockerfile: MotorcycleDeliveryRentWebAPI/Dockerfile
+    ports:
+      - 8080:8080
+      - 8081:8081
+
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: 'rabbitmq'
@@ -14,8 +22,6 @@ services:
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
-    networks:
-      - rabbitmq_go_net
 
   mongo:
     image: mongo:latest
@@ -30,10 +36,6 @@ services:
 
 volumes:
   mongodb_data_container:
-
-networks:
-  rabbitmq_go_net:
-    driver: bridge
 
 
 # mongodb://admin:admin@localhost:27017  #RabbitMQ    http://localhost:15672

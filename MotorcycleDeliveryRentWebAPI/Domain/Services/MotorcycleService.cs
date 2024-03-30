@@ -93,7 +93,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 
         public bool Delete(string id)
         {
-            List<RentModel> model = _contextRent.Find(x => x.MotorcycleId == id).ToList();
+            RentModel model = _contextRent.Find(x => x.MotorcycleId == id).FirstOrDefault();
             if (model != null)
             {
                 _logger.LogInformation($"Motorcycle with id = {id} cannot be deleted as it already has a plan registration");

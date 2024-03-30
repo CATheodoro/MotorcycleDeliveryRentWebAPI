@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
@@ -11,23 +10,23 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
     [ApiController]
     public class DriverController : ControllerBase
     {
-        private readonly IDriverService deliveryService;
+        private readonly IDriverService _driverService;
 
-        public DriverController(IDriverService deliveryService)
+        public DriverController(IDriverService driverService)
         {
-            this.deliveryService = deliveryService;
+            this._driverService = driverService;
         }
 
         [HttpGet]
         public ActionResult<List<DriverDTO>> GetAll()
         {
-            return Ok(deliveryService.GetAll());
+            return Ok(_driverService.GetAll());
         }
 
         [HttpGet("{id}")]
         public ActionResult<DriverDTO> GetById(string id)
         {
-            DriverDTO dto = deliveryService.GetById(id);
+            DriverDTO dto = _driverService.GetById(id);
             if (dto != null)
                 return Ok(dto);
 
@@ -35,22 +34,22 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPost]
-        public ActionResult<DriverDTO> Create([FromBody] DriverRequest deliveryRequestCreateModel)
+        public ActionResult<DriverDTO> Create([FromBody] DriverRequest request)
         {
-            DriverDTO delivery = deliveryService.Create(deliveryRequestCreateModel);
+            DriverDTO delivery = _driverService.Create(request);
             return CreatedAtAction(nameof(GetAll), new { id = delivery.Id }, delivery);
         }
 
         [HttpPost("Login")]
         public ActionResult<DriverDTO> Login([FromBody] LoginAdminDriverRequest request)
         {
-            return Ok(deliveryService.Login(request));
+            return Ok(_driverService.Login(request));
         }
 
         [HttpPut("{id}"), Authorize(Roles = "User")]
-        public ActionResult Update(string id, [FromBody] DriverUpdateRequest deliveryRequestUpdateModel)
+        public ActionResult Update(string id, [FromBody] DriverUpdateRequest request)
         {
-            bool successful = deliveryService.Update(id, deliveryRequestUpdateModel);
+            bool successful = _driverService.Update(id, request);
             if (successful)
                 return Ok(new { message = "Driver updated successfully" });
 
@@ -58,9 +57,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPut("Password/{id}"), Authorize(Roles = "User")]
-        public ActionResult UpdatePassword(string id, [FromBody] PasswordRequest deliveryRequestPasswordModel)
+        public ActionResult UpdatePassword(string id, [FromBody] PasswordRequest request)
         {
-            bool successful = deliveryService.UpdatePassword(id, deliveryRequestPasswordModel);
+            bool successful = _driverService.UpdatePassword(id, request);
             if (successful)
                 return Ok(new { message = "Password updated successfully" });
 
@@ -70,7 +69,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         [HttpPost("cnh/upload"), Authorize(Roles = "User")]
         public ActionResult UploadCnhImage([FromForm] IFormFile image)
         {
-            bool updateSuccessful = deliveryService.UploadCnhImage(image);
+            bool updateSuccessful = _driverService.UploadCnhImage(image);
             if (updateSuccessful)
                 return Ok(new { message = "Image of driver's license was sent successfully" });
 

@@ -28,7 +28,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         {
             DeliveryDTO dto = _deliveryService.GetById(id);
             if (dto != null)
-                return Ok();
+                return Ok(dto);
 
             return NotFound($"Delivery id = {id} not found");
         }
@@ -55,7 +55,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
             return NotFound();
         }
 
-        [HttpPut("Delivery/{id}")]
+        [HttpPut("Delivery/{id}"), Authorize(Roles = "User")]
         public ActionResult Delivery(string id)
         {
             bool successful = _deliveryService.Delivery(id);
@@ -65,14 +65,14 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
             return NotFound();
         }
 
-        [HttpPut("Cancel/{id}")]
+        [HttpPut("Cancel/{id}"), Authorize(Roles = "Admin")]
         public ActionResult Cancel(string id)
         {
             bool successful = _deliveryService.Cancel(id);
             if (successful)
                 return Ok(new { message = "Race Canceled" });
 
-            return NotFound();
+            return BadRequest("A race has already ended or been canceled");
         }
     }
 }
