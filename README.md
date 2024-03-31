@@ -161,6 +161,8 @@ This access token should be inserted in the top right corner of the `Swagger`, b
 
 `Token Exemple`: Bearer eyJhbGciOiJodHRwOi8vd3d3
 
+"Inside the folder `MotorcycleDeliveryRentWebAPI\MotorcycleDeliveryRentWebAPI\Infra`, there is a file named `MotorcycleRentDelivery.postman_collection.json` that can be imported into Postman.
+
 ## Endpoints
 
 ###Admin
