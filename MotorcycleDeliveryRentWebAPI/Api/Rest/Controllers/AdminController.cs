@@ -32,7 +32,6 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
                 return Ok(dto);
 
             return NotFound($"Admin with Id = {id} not found");
-
         }
 
         [HttpPost]
@@ -48,7 +47,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
             return Ok(_adminService.Login(request));
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id}"), Authorize(Roles = "Admin")]
         public ActionResult UpdatePassword(string id, PasswordRequest request)
         {
             bool successful = _adminService.UpdatePassword(id, request);

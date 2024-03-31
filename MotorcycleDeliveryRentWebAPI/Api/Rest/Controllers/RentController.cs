@@ -16,7 +16,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
             _rentService = rentService;
         }
 
-        [HttpGet]
+        [HttpGet, Authorize(Roles = "Admin")]
         public ActionResult<List<RentDTO>> GetAll()
         {
             return Ok(_rentService.GetAll());
@@ -33,7 +33,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
             return NotFound($"Rent with Id = {id} not found");
         }
 
-        [HttpGet("Driver/{driverId}")]
+        [HttpGet("Driver/{driverId}"), Authorize(Roles = "User")]
         public ActionResult<List<RentDTO>> GetByDriverId(string driverId)
         {
             List<RentDTO> dto = _rentService.GetByDriverId(driverId);
