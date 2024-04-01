@@ -13,8 +13,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
         public DateOnly ReturnDate { get; set; }
         public decimal TotalPrice { get; set; }
 
-        internal static List<RentDTO> Convert(List<RentModel> models)
+        internal static async Task<List<RentDTO>> Convert(Task<List<RentModel>> task)
         {
+            List<RentModel> models = await task;
             List<RentDTO> dtos = new List<RentDTO>();
 
             foreach (var model in models)
@@ -36,7 +37,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
             return dtos;
         }
 
-        internal static RentDTO Convert(RentModel model)
+        internal static async Task<RentDTO> Convert(RentModel model)
         {
             RentDTO dto = new RentDTO();
             dto.Id = model.Id;

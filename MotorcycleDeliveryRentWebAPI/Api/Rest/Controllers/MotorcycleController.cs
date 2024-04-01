@@ -18,15 +18,16 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<MotorcycleDTO>> GetAll()
+        public async Task<ActionResult<List<MotorcycleDTO>>> GetAll()
         {
-            return Ok(_motorcycleService.GetAll());
+            var dto = await _motorcycleService.GetAllAsync();
+            return Ok(dto);
         }
 
         [HttpGet("{id}"), Authorize(Roles = "Admin")]
-        public ActionResult<MotorcycleDTO> GetById(string id)
+        public async Task<ActionResult<MotorcycleDTO>> GetById(string id)
         {
-            MotorcycleDTO dto = _motorcycleService.GetById(id);
+            var dto = await _motorcycleService.GetByIdAsync(id);
             if (dto != null)
                 return Ok(dto);
 
@@ -35,16 +36,17 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
 
 
         [HttpGet("Available")]
-        public ActionResult<MotorcycleDTO> GetAvailable()
+        public async Task<ActionResult<MotorcycleDTO>> GetAvailable()
         {
-            return Ok(_motorcycleService.GetAvailable()); ;
+            var dto = await _motorcycleService.GetFirstAvailableAsync();
+            return Ok(dto); ;
         }
 
 
         [HttpGet("plate/{plate}"), Authorize(Roles = "Admin")]
-        public ActionResult<MotorcycleDTO> GetByPlate(string plate)
+        public async Task<ActionResult<MotorcycleDTO>> GetByPlate(string plate)
         {
-            MotorcycleDTO dto = _motorcycleService.GetByPlate(plate);
+            var dto = await _motorcycleService.GetByPlateAsync(plate);
             if (dto != null)
                 return Ok(dto);
 
@@ -52,16 +54,16 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPost, Authorize(Roles = "Admin")]
-        public ActionResult<MotorcycleDTO> Create([FromBody] MotorcycleRequest Model)
+        public async Task<ActionResult<MotorcycleDTO>> Create([FromBody] MotorcycleRequest Model)
         {
-            MotorcycleDTO dto = _motorcycleService.Create(Model);
+            var dto = await _motorcycleService.CreateAsync(Model);
             return CreatedAtAction(nameof(GetAll), new { id = dto.Id }, dto);
         }
 
         [HttpPut("{id}"), Authorize(Roles = "Admin")]
-        public ActionResult Update(string id, [FromBody] MotorcycleUpdateRequest motorbike)
+        public async Task<ActionResult> Update(string id, [FromBody] MotorcycleUpdateRequest motorbike)
         {
-            bool successful = _motorcycleService.Update(id, motorbike);
+            bool successful = await _motorcycleService.UpdateAsync(id, motorbike);
             if (successful)
                 return Ok(new { message = "Motorcycle updated successfully." });
 
@@ -69,9 +71,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPut("plate/{id}"), Authorize(Roles = "Admin")]
-        public ActionResult UpdatePlate(string id, [FromBody] string plate)
+        public async Task<ActionResult> UpdatePlate(string id, [FromBody] string plate)
         {
-            bool successful = _motorcycleService.UpdatePlate(id, plate);
+            bool successful = await _motorcycleService.UpdatePlateAsync(id, plate);
             if (successful)
                 return Ok(new { message = "Motorcycle Plate updated successfully." });
 
@@ -79,9 +81,10 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpDelete("{id}"), Authorize(Roles = "Admin")]
-        public ActionResult Delete(string id)
+        public async Task<ActionResult> Delete(string id)
         {
-            if (_motorcycleService.Delete(id))
+            bool successful = await _motorcycleService.DeleteAsync(id);
+            if (successful)
                 return Ok($"Motorbike with Id = {id} delete");
 
             return NotFound("Motorbike with Id = {id} not found");

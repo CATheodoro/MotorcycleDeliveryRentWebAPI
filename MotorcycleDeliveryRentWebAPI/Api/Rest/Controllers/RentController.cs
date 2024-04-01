@@ -17,16 +17,16 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpGet, Authorize(Roles = "Admin")]
-        public ActionResult<List<RentDTO>> GetAll()
+        public async Task<ActionResult<List<RentDTO>>> GetAll()
         {
-            return Ok(_rentService.GetAll());
+            var dto = await _rentService.GetAllAsync();
+            return Ok(dto);
         }
 
-
         [HttpGet("{id}"), Authorize(Roles = "User")]
-        public ActionResult<List<RentDTO>> GetById(string id)
+        public async Task<ActionResult<List<RentDTO>>> GetById(string id)
         {
-            RentDTO dto = _rentService.GetById(id);
+            RentDTO dto = await _rentService.GetByIdAsync(id);
             if (dto != null)
                 return Ok(dto);
 
@@ -34,9 +34,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpGet("Driver/{driverId}"), Authorize(Roles = "User")]
-        public ActionResult<List<RentDTO>> GetByDriverId(string driverId)
+        public async Task<ActionResult<List<RentDTO>>> GetByDriverId(string driverId)
         {
-            List<RentDTO> dto = _rentService.GetByDriverId(driverId);
+            List<RentDTO> dto = await _rentService.GetByDriverIdAsync(driverId);
             if (dto != null)
                 return Ok(dto);
 
@@ -44,17 +44,17 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPost("{planId}"), Authorize(Roles = "User")]
-        public ActionResult<RentDTO> Create(string planId)
+        public async Task<ActionResult<RentDTO>> Create(string planId)
         {
-            RentDTO model = _rentService.Create(planId);
-
+            var model = await _rentService.CreateAsync(planId);
             return CreatedAtAction(nameof(GetAll), new { id = model.Id }, model);
         }
 
         [HttpPut("{id}"), Authorize(Roles = "User")]
-        public ActionResult Update(string id)
+        public async Task<ActionResult> Update(string id)
         {
-            if (_rentService.Update(id))
+            var successful = await _rentService.UpdateAsync(id);
+            if (successful)
                 return Ok(new { message = "Rent updated successfully" });
 
             return NotFound($"Rent with Id = {id} not found");

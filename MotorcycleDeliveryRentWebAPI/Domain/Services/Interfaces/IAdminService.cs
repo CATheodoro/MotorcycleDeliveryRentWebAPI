@@ -6,13 +6,13 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
 {
     public interface IAdminService
     {
-        public List<AdminDTO> GetAll();
-        public AdminDTO GetById(string id);
-        public AdminDTO GetByEmail(string email);
-        public AdminDTO Create(LoginAdminDriverRequest request);
-        public string Login(LoginAdminDriverRequest request);
-        public bool UpdatePassword(string id, PasswordRequest request);
-        public AdminModel GetByIdModel(string id);
-        public AdminModel GetByEmailModel(string email);
+        public Task<List<AdminDTO>> GetAllAsync();
+        public Task<AdminDTO> GetByIdAsync(string id);
+        public Task<AdminDTO> GetByEmailAsync(string email);
+        public Task<AdminDTO> CreateAsync(LoginAdminDriverRequest request);
+        public Task<string> Login(LoginAdminDriverRequest request);
+        public Task<bool> UpdatePassword(string id, PasswordRequest request);
+        public Task<AdminModel> GetByIdModel(string id);
+        public Task<AdminModel> GetByEmailModel(string email);
     }
 }

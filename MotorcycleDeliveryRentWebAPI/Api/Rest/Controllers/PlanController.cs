@@ -19,15 +19,16 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<PlanDTO>> Get()
+        public async Task<ActionResult<List<PlanDTO>>> Get()
         {
-            return Ok(_planService.GetAll());
+            var model = await _planService.GetAllAsync();
+            return Ok(model);
         }
 
         [HttpGet("{id}")]
-        public ActionResult<PlanDTO> GetById(string id)
+        public async Task<ActionResult<PlanDTO>> GetById(string id)
         {
-            PlanDTO model = _planService.GetById(id);
+            var model = await _planService.GetByIdAsync(id);
             if (model != null)
                 return Ok(model);
 
@@ -35,16 +36,17 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPost, Authorize(Roles = "Admin")]
-        public ActionResult<PlanDTO> Create([FromBody] PlanRequest request)
+        public async Task<ActionResult<PlanDTO>> Create([FromBody] PlanRequest request)
         {
-            PlanDTO plan = _planService.Create(request);
+            PlanDTO plan = await _planService.CreateAsync(request);
             return CreatedAtAction(nameof(Get), new { id = plan.Id }, plan);
         }
 
         [HttpPut("{id}"), Authorize(Roles = "Admin")]
-        public ActionResult Update(string id, [FromBody] PlanRequest request)
+        public async Task<ActionResult> Update(string id, [FromBody] PlanRequest request)
         {
-            if (_planService.Update(id, request))
+            var model = await _planService.UpdateAsync(id, request);
+            if (model)
                 return Ok(new { message = "Plan updated successfully." });
 
             return NotFound("Plan with Id = {id} not found");

@@ -1,15 +1,16 @@
-﻿using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
+﻿using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
+using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
 
 namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
 {
     public interface IDeliveryService
     {
-        public List<DeliveryDTO> GetAll();
-        public DeliveryDTO GetById(string id);
-        public List<DeliveryDTO> GetByDriverNotification();
-        public DeliveryDTO Create(decimal price);
-        public bool Accept(string id);
-        public bool Delivery(string id);
-        public bool Cancel(string id);
+        public Task<List<DeliveryDTO>> GetAllAsync();
+        public Task<DeliveryDTO> GetByIdAsync(string id);
+        public Task<DeliveryDTO> CreateAsync(decimal price);
+        public Task<bool> AcceptAsync(string id);
+        public Task<bool> DeliveryAsync(string id);
+        public Task<bool> CancelAsync(string id);
+        public Task<DeliveryModel> GetByIdModel(string id);
     }
 }

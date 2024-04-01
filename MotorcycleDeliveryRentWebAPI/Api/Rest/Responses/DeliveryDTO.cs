@@ -16,8 +16,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
 
 
 
-        internal static List<DeliveryDTO> Convert(List<DeliveryModel> models)
+        internal static async Task<List<DeliveryDTO>> Convert(Task<List<DeliveryModel>> task)
         {
+            List<DeliveryModel> models = await task;
             List<DeliveryDTO> dtos = new List<DeliveryDTO>();
 
             foreach (var model in models)
@@ -39,7 +40,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
             return dtos;
         }
 
-        internal static DeliveryDTO Convert(DeliveryModel model)
+        internal static async Task<DeliveryDTO> Convert(DeliveryModel model)
         {
             DeliveryDTO dto = new DeliveryDTO();
             dto.Id = model.Id;

@@ -9,7 +9,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Requests
 
         internal static AdminModel ConvertAdmin(AdminModel model, PasswordRequest request)
         {
-            model.Password = request.NewPassword;
+            model.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             return model;
         }
 

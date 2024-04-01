@@ -7,8 +7,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
         public string? Id { get; set; }
         public string? Email { get; set; }
 
-        internal static List<AdminDTO> Convert(List<AdminModel> models)
+        internal static async Task<List<AdminDTO>> Convert(Task<List<AdminModel>> task)
         {
+            List<AdminModel> models = await task;
             List<AdminDTO> dtos = new List<AdminDTO>();
 
             foreach (var model in models)
@@ -21,10 +22,11 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
 
                 dtos.Add(dto);
             }
+
             return dtos;
         }
 
-        internal static AdminDTO Convert(AdminModel model)
+        internal static async Task<AdminDTO> Convert(AdminModel model)
         {
             AdminDTO dto = new AdminDTO();
             dto.Id = model.Id;

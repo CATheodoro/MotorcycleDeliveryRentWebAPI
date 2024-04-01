@@ -8,6 +8,8 @@ using MotorcycleDeliveryRentWebAPI.Infra.Config;
 using MotorcycleDeliveryRentWebAPI.Middlewares;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using MotorcycleDeliveryRentWebAPI.Domain.Repositories;
+using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,12 +22,26 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddLogging();
 
+builder.Services.AddScoped<IMotorcycleRepository, MotorcycleRepository>();
 builder.Services.AddScoped<IMotorcycleService, MotorcycleService>();
+
+builder.Services.AddScoped<IDriverRepository, DriverRepository>();
+builder.Services.AddScoped<ICnhImageRepository, CnhImageRepository>();
 builder.Services.AddScoped<IDriverService, DriverService>();
+
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+
+builder.Services.AddScoped<IRentRepository, RentRepository>();
 builder.Services.AddScoped<IRentService, RentService>();
+
+builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<IPlanService, PlanService>();
+
+builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
 builder.Services.AddScoped<IDeliveryService, DeliveryService>();
+
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddControllers();

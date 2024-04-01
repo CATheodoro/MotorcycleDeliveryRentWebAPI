@@ -6,8 +6,8 @@ using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
 using MotorcycleDeliveryRentWebAPI.Api.Validators;
+using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
-using MotorcycleDeliveryRentWebAPI.Infra.Config;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -16,70 +16,102 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 {
     public class DriverService : IDriverService
     {
-        private readonly IMongoCollection<DriverModel> _context;
-        private readonly IMongoCollection<CnhImageModel> _contextImage;
+        private readonly IDriverRepository _repository;
+        private readonly ICnhImageRepository _cnhImageRepository;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<DriverModel> _logger;
 
-        public DriverService(IMongoDBSettings settings, IMongoClient mongoClient, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ILogger<DriverModel> logger)
+        public DriverService(IDriverRepository driverRepository, ICnhImageRepository cnhImageRepository, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ILogger<DriverModel> logger)
         {
-            var database = mongoClient.GetDatabase(settings.DatabaseName);
-            _context = database.GetCollection<DriverModel>("Driver");
-            _contextImage = database.GetCollection<CnhImageModel>("CnhImage");
-
+            _repository = driverRepository;
+            _cnhImageRepository = cnhImageRepository;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
-        public List<DriverDTO> GetAll()
+        public async Task<List<DriverDTO>> GetAllAsync()
         {
-            return DriverDTO.Convert(_context.Find(x => true).ToList());
+            var model = _repository.GetAll();
+            return await DriverDTO.Convert(model);
         }
 
-        public DriverDTO GetById(string id)
+        public async Task<DriverDTO> GetByIdAsync(string id)
         {
-            DriverModel model = _context.Find(x => x.Id == id).FirstOrDefault();
+            var model = await _repository.GetById(id);
             if (model != null)
-                return DriverDTO.Convert(model);
+                return await DriverDTO.Convert(model);
 
             _logger.LogDebug($"Driver with Id = {id} not found");
             return null;
         }
 
-        public List<DriverDTO> GetByStatus(DriverStatusEnum status)
+        public async Task<List<DriverDTO>> GetByStatusAsync(DriverStatusEnum status)
         {
-            return DriverDTO.Convert(_context.Find(x => x.Status == status).ToList());
+            var model = _repository.GetByStatus(status);
+            return await DriverDTO.Convert(model);
         }
 
-        public DriverDTO GetByEmail(string email)
+        public async Task<DriverDTO> GetByEmailAsync(string email)
         {
-            DriverModel model = _context.Find(x => x.Email == email).FirstOrDefault();
+            DriverModel model = await _repository.GetByEmail(email);
             if (model != null)
-                return DriverDTO.Convert(model);
+                return await DriverDTO.Convert(model);
 
             _logger.LogDebug($"Driver with E-mail = {email} not found");
             return null;
         }
 
-        public DriverDTO Create(DriverRequest request)
+        public async Task<DriverDTO> CreateAsync(DriverRequest request)
         {
             DriverModel model = DriverRequest.Convert(request);
-            CheckDelivery(model);
-            _context.InsertOne(model);
-            return DriverDTO.Convert(model);
+
+            ValidatorAdminDriver.Password(model.Password);
+
+            ValidatorAdminDriver.Email(model.Email);
+            var email = await _repository.GetByEmail(model.Email);
+            if (email != null)
+            {
+                _logger.LogError("The E-mail must be unique");
+                throw new Exception("The E-mail must be unique");
+            }
+
+            var cnh = await _repository.GetByCnh(model.Cnh);
+            if (cnh != null)
+            {
+                _logger.LogError("The CNH must be unique");
+                throw new Exception("The CNH must be unique");
+            }
+
+            ValidatorAdminDriver.Cnpj(model.Cnpj);
+            var cnpj = await _repository.GetByCnpj(model.Cnpj);
+            if (cnpj != null)
+            {
+                _logger.LogError("The CNPJ must be unique");
+                throw new Exception("The CNPJ must be unique");
+            }
+
+            await _repository.CreateAsync(model);
+            return await DriverDTO.Convert(model);
         }
 
-        public bool Update(string id, DriverUpdateRequest request)
+        public async Task<bool> UpdateAsync(string id, DriverUpdateRequest request)
         {
             var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            DriverModel model = GetByEmailModel(email);
+            DriverModel model = await GetByEmailModel(email);
+
+            if (id != model.Id)
+            {
+                _logger.LogError($"Error ID = {id} != ID = {model.Id}");
+                throw new Exception($"Error ID = {id} != ID = {model.Id}");
+            }
 
             if (model.Email != request.Email)
             {
                 ValidatorAdminDriver.Email(request.Email);
-                if (_context.Find(x => x.Email == request.Email).FirstOrDefault() != null)
+                var emailvalidate = await _repository.GetByEmail(request.Email);
+                if (emailvalidate != null)
                 {
                     _logger.LogError("The E-mail must be unique");
                     throw new Exception("The E-mail must be unique");
@@ -88,7 +120,8 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 
             if (model.Cnh != request.Cnh)
             {
-                if (_context.Find(x => x.Cnh == request.Cnh).FirstOrDefault() != null)
+                var cnh = await _repository.GetByCnh(request.Cnh);
+                if (cnh != null)
                 {
                     _logger.LogError("The CNH must be unique");
                     throw new Exception("The CNH must be unique");
@@ -98,7 +131,8 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             if (model.Cnpj != request.Cnpj)
             {
                 ValidatorAdminDriver.Cnpj(request.Cnpj);
-                if (_context.Find(x => x.Cnpj == request.Cnpj).FirstOrDefault() != null)
+                var cnpj = await _repository.GetByCnpj(request.Cnpj);
+                if (cnpj != null)
                 {
                     _logger.LogError("The CNPJ must be unique");
                     throw new Exception("The CNPJ must be unique");
@@ -106,16 +140,16 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             }
 
             model = DriverUpdateRequest.Convert(model, request);
-            _context.ReplaceOne(x => x.Id == id, model);
+            await _repository.UpdateAsync(id, model);
             return true;
         }
 
-        public bool UpdatePassword(string id, PasswordRequest request)
+        public async Task<bool> UpdatePasswordAsync(string id, PasswordRequest request)
         {
             ValidatorAdminDriver.Password(request.OldPassword);
 
             var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            DriverModel model = GetByEmailModel(email);
+            DriverModel model = await GetByEmailModel(email);
 
             if (!BCrypt.Net.BCrypt.Verify(request.OldPassword, model.Password))
             {
@@ -124,22 +158,22 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             }
 
             model = PasswordRequest.ConvertDriver(model, request);
-            _context.ReplaceOne(x => x.Id == id, model);
+            await _repository.UpdateAsync(id, model);
             return true;
         }
 
-        public bool UpdateStatus(string id, DriverStatusEnum status)
+        public async Task<bool> UpdateStatus(string id, DriverStatusEnum status)
         {
-            DriverModel model = GetByIdModel(id);
+            DriverModel model = await GetByIdModel(id);
 
             model.Status = status;
-            _context.ReplaceOne(x => x.Id == id, model);
+            await _repository.UpdateAsync(id, model);
             return true;
         }
 
-        public string Login(LoginAdminDriverRequest request)
+        public async Task<string> LoginAsync(LoginAdminDriverRequest request)
         {
-            DriverModel model = GetByEmailModel(request.Email);
+            DriverModel model = await GetByEmailModel(request.Email);
 
             if (model.Email != request.Email)
                 throw new Exception("E-mail not found");
@@ -176,35 +210,10 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             return jwt;
         }
 
-        public void CheckDelivery(DriverModel model)
-        {
-            ValidatorAdminDriver.Email(model.Email);
-            if (_context.Find(x => x.Email == model.Email).FirstOrDefault() != null)
-            {
-                _logger.LogError("The E-mail must be unique");
-                throw new Exception("The E-mail must be unique");
-            }
-
-            if (_context.Find(x => x.Cnh == model.Cnh).FirstOrDefault() != null)
-            {
-                _logger.LogError("The CNH must be unique");
-                throw new Exception("The CNH must be unique");
-            }
-
-            ValidatorAdminDriver.Cnpj(model.Cnpj);
-            if (_context.Find(x => x.Cnpj == model.Cnpj).FirstOrDefault() != null)
-            {
-                _logger.LogError("The CNPJ must be unique");
-                throw new Exception("The CNPJ must be unique");
-            }
-
-            ValidatorAdminDriver.Password(model.Password);
-        }
-
-        public bool UploadCnhImage([FromForm] IFormFile image)
+        public async Task<bool> UploadCnhImageAsync([FromForm] IFormFile image)
         {
             var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            DriverModel model = GetByEmailModel(email);
+            DriverModel model = await GetByEmailModel(email);
 
             if (image != null && image.Length > 0)
             {
@@ -221,23 +230,23 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 
                 CnhImageModel cnhImage = CnhImageRequest.Convert(image.FileName, filePath, image.Length);
 
-                _contextImage.InsertOne(cnhImage);
+                await _cnhImageRepository.CreateAsync(cnhImage);
                 model.CnhImageId = cnhImage.Id;
-                _context.ReplaceOne(x => x.Id == model.Id, model);
+                await _repository.UpdateAsync(model.Id, model);
 
                 return true;
             }
             return false;
         }
 
-        public DriverModel GetByIdModel(string id)
+        public async Task<DriverModel> GetByIdModel(string id)
         {
-            return _context.Find(x => x.Id == id).FirstOrDefault() ?? throw new Exception($"Driver with Id = {id} not found");
+            return await _repository.GetById(id) ?? throw new Exception($"Driver with Id = {id} not found");
         }
 
-        public DriverModel GetByEmailModel(string email)
+        public async Task<DriverModel> GetByEmailModel(string email)
         {
-            return _context.Find(x => x.Email == email).FirstOrDefault() ?? throw new Exception($"Driver with E-mail = {email} not found");
+            return await _repository.GetByEmail(email) ?? throw new Exception($"Driver with E-mail = {email} not found");
         }
     }
 }

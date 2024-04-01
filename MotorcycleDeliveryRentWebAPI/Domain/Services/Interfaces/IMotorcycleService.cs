@@ -7,15 +7,16 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
 {
     public interface IMotorcycleService
     {
-        public List<MotorcycleDTO> GetAll();
-        public MotorcycleDTO GetAvailable();
-        public MotorcycleDTO GetById(string id);
-        public MotorcycleDTO GetByPlate(string plate);
-        public MotorcycleDTO Create(MotorcycleRequest request);
-        public bool Update(string id, MotorcycleUpdateRequest request);
-        public bool UpdatePlate(string id, string plate);
-        public bool UpdateStatus(string id, MotorcycleStatusEnum status);
-        public bool Delete(string id);
-        public MotorcycleModel GetAvailableModel();
+        public Task<List<MotorcycleDTO>> GetAllAsync();
+        public Task<MotorcycleDTO> GetFirstAvailableAsync();
+        public Task<MotorcycleDTO> GetByIdAsync(string id);
+        public Task<MotorcycleDTO> GetByPlateAsync(string plate);
+        public Task<MotorcycleDTO> CreateAsync(MotorcycleRequest request);
+        public Task<bool> UpdateAsync(string id, MotorcycleUpdateRequest request);
+        public Task<bool> UpdatePlateAsync(string id, string plate);
+        public Task<bool> UpdateStatusAsync(string id, MotorcycleStatusEnum status);
+        public Task<bool> DeleteAsync(string id);
+        public Task<MotorcycleModel> GetByIdModel(string id);
+        public Task<MotorcycleModel> GetByPlateModel(string plate);
     }
 }

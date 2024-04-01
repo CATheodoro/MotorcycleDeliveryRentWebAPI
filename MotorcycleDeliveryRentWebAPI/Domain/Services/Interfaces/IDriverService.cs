@@ -8,17 +8,17 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
 {
     public interface IDriverService
     {
-        public List<DriverDTO> GetAll();
-        public DriverDTO GetById(string id);
-        public List<DriverDTO> GetByStatus(DriverStatusEnum status);
-        public DriverDTO GetByEmail(string email);
-        public DriverDTO Create(DriverRequest request);
-        public bool Update(string id, DriverUpdateRequest request);
-        public bool UpdatePassword(string id, PasswordRequest request);
-        public bool UpdateStatus(string id, DriverStatusEnum status);
-        public string Login(LoginAdminDriverRequest request);
-        public DriverModel GetByIdModel(string id);
-        public DriverModel GetByEmailModel(string email);
-        public bool UploadCnhImage([FromForm] IFormFile image);
+        public Task<List<DriverDTO>> GetAllAsync();
+        public Task<DriverDTO> GetByIdAsync(string id);
+        public Task<List<DriverDTO>> GetByStatusAsync(DriverStatusEnum status);
+        public Task<DriverDTO> GetByEmailAsync(string email);
+        public Task<DriverDTO> CreateAsync(DriverRequest request);
+        public Task<bool> UpdateAsync(string id, DriverUpdateRequest request);
+        public Task<bool> UpdatePasswordAsync(string id, PasswordRequest request);
+        public Task<bool> UpdateStatus(string id, DriverStatusEnum status);
+        public Task<string> LoginAsync(LoginAdminDriverRequest request);
+        public Task<bool> UploadCnhImageAsync([FromForm] IFormFile image);
+        public Task<DriverModel> GetByIdModel(string id);
+        public Task<DriverModel> GetByEmailModel(string email);
     }
 }

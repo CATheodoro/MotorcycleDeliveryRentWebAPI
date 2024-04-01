@@ -27,7 +27,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Validators
 
             if (!regex.IsMatch(password))
             {
-                throw new Exception("the password must be at least: 8 characters, 1 uppercase, 1 lowercase, 1 number and 1 especial character");
+                throw new Exception("The password must be at least: 8 characters, 1 uppercase, 1 lowercase, 1 number and 1 especial character");
             }
         }
         public static void Cnpj(string cnpj)

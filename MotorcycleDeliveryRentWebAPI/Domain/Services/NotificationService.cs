@@ -1,5 +1,7 @@
 ﻿using MongoDB.Driver;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
+using MotorcycleDeliveryRentWebAPI.Domain.Repositories;
+using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Infra.Config;
 using RabbitMQ.Client;
@@ -9,16 +11,15 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 {
     public class NotificationService : INotificationService
     {
+        private readonly INotificationRepository _repository;
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly ILogger<NotificationModel> _logger;
 
-        private readonly IMongoCollection<NotificationModel> _context;
-
-        public NotificationService(IMongoDBSettings settings, IMongoClient mongoClient, ILogger<NotificationModel> logger)
+        public NotificationService(INotificationRepository notificationRepository, ILogger<NotificationModel> logger)
         {
-            var database = mongoClient.GetDatabase(settings.DatabaseName);
-            _context = database.GetCollection<NotificationModel>("Notification");
+
+            _repository = notificationRepository;
             _logger = logger;
 
             var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).Build();
@@ -43,15 +44,17 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
                                   autoDelete: false,
                                   arguments: null);
 
-            string message = $"New delivery created: {deliveryId}";
+            string message = $"New delivery created: {deliveryId}, {DateTime.UtcNow}";
             var body = Encoding.UTF8.GetBytes(message);
 
             _channel.BasicPublish(exchange: "",
                                   routingKey: "new_delivery_notifications",
                                   basicProperties: null,
                                   body: body);
-            _logger.LogInformation($"New delivery created: {deliveryId}, {DateTime.UtcNow}");
-            _context.InsertOne(new NotificationModel { Message = $"New delivery created: {deliveryId}", Timestamp = DateTime.UtcNow });
+            _logger.LogInformation(message);
+
+            NotificationModel model = new NotificationModel { Message = message, Timestamp = DateTime.UtcNow };
+            _repository.Create(model);
         }
 
         public void PublishDeliveryAcceptance(string deliveryId, string driverId)
@@ -62,15 +65,17 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
                                   autoDelete: false,
                                   arguments: null);
 
-            string message = $"Delivery {deliveryId} accepted by driver {driverId}";
+            string message = $"Delivery {deliveryId} accepted by driver {driverId}, {DateTime.UtcNow}";
             var body = Encoding.UTF8.GetBytes(message);
 
             _channel.BasicPublish(exchange: "",
                                   routingKey: "delivery_acceptances",
                                   basicProperties: null,
                                   body: body);
-            _logger.LogInformation($"Delivery {deliveryId} accepted by driver {driverId}, {DateTime.UtcNow}");
-            _context.InsertOne(new NotificationModel { Message = $"Delivery {deliveryId} accepted by driver {driverId}", Timestamp = DateTime.UtcNow });
+            _logger.LogInformation(message);
+
+            NotificationModel model = new NotificationModel { Message = message, Timestamp = DateTime.UtcNow };
+            _repository.Create(model);
         }
 
 

@@ -1,58 +1,57 @@
-﻿using MongoDB.Driver;
-using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
+﻿using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
+using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
-using MotorcycleDeliveryRentWebAPI.Infra.Config;
 
 namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 {
     public class PlanService : IPlanService
     {
-        private readonly IMongoCollection<PlanModel> _context;
+        private readonly IPlanRepository _repository;
         private readonly ILogger<PlanModel> _logger;
 
-        public PlanService(IMongoDBSettings settings, IMongoClient mongoClient, ILogger<PlanModel> logger)
+        public PlanService(IPlanRepository planRepository, ILogger<PlanModel> logger)
         {
-            var database = mongoClient.GetDatabase(settings.DatabaseName);
-            _context = database.GetCollection<PlanModel>("Plan");
+            _repository = planRepository;
             _logger = logger;
         }
 
-        public List<PlanDTO> GetAll()
+        public async Task<List<PlanDTO>> GetAllAsync()
         {
-            return PlanDTO.Convert(_context.Find(x => true).ToList());
+            var model = _repository.GetAll();
+            return await PlanDTO.Convert(model);
         }
 
-        public PlanDTO GetById(string id)
+        public async Task<PlanDTO> GetByIdAsync(string id)
         {
-            PlanModel model = _context.Find(x => x.Id == id).FirstOrDefault();
+            var model = await _repository.GetById(id);
             if (model != null)
-                return PlanDTO.Convert(model);
+                return await PlanDTO.Convert(model);
 
             _logger.LogDebug($"Plan with Id = {id} not found");
             return null;
         }
 
-        public PlanDTO Create(PlanRequest request)
+        public async Task<PlanDTO> CreateAsync(PlanRequest request)
         {
             PlanModel model = PlanRequest.Convert(request);
-            _context.InsertOne(model);
-            return PlanDTO.Convert(model);
+            _repository.CreateAsync(model);
+            return await PlanDTO.Convert(model);
         }
 
-        public bool Update(string id, PlanRequest request)
+        public async Task<bool> UpdateAsync(string id, PlanRequest request)
         {
-            PlanModel model = GetByIdModel(id);
+            PlanModel model = await GetByIdModel(id);
             model = PlanRequest.ConvertUpdate(model, request);
-            _context.ReplaceOne(x => x.Id == id, model);
+            await _repository.UpdateAsync(id, model);
             return true;
 
         }
 
-        public PlanModel GetByIdModel(string id)
+        public async Task<PlanModel> GetByIdModel(string id)
         {
-            return _context.Find(x => x.Id == id).FirstOrDefault() ?? throw new Exception($"Plan with Id = {id} not found"); ;
+            return await _repository.GetById(id) ?? throw new Exception($"Plan with Id = {id} not found"); ;
         }
     }
 }

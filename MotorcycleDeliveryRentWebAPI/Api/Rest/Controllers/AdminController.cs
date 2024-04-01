@@ -19,15 +19,16 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpGet, Authorize(Roles = "Admin")]
-        public ActionResult<List<AdminDTO>> GetAll()
+        public async Task<ActionResult<List<AdminDTO>>> GetAll()
         {
-            return Ok(_adminService.GetAll());
+            var admins = await _adminService.GetAllAsync();
+            return Ok(admins);
         }
 
         [HttpGet("{id}"), Authorize(Roles = "Admin")]
-        public ActionResult<AdminDTO> GetById(string id)
+        public async Task<ActionResult<AdminDTO>> GetById(string id)
         {
-            AdminDTO dto = _adminService.GetById(id);
+            var dto = await _adminService.GetByIdAsync(id);
             if (dto != null)
                 return Ok(dto);
 
@@ -35,24 +36,25 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPost]
-        public ActionResult<AdminDTO> Create([FromBody] LoginAdminDriverRequest request)
+        public async Task<ActionResult<AdminDTO>> Create([FromBody] LoginAdminDriverRequest request)
         {
-            AdminDTO delivery = _adminService.Create(request);
+            var delivery = await _adminService.CreateAsync(request);
             return CreatedAtAction(nameof(GetAll), new { id = delivery.Id }, delivery);
         }
 
         [HttpPost("Login")]
-        public ActionResult<AdminDTO> Login([FromBody] LoginAdminDriverRequest request)
+        public async Task<ActionResult> Login([FromBody] LoginAdminDriverRequest request)
         {
-            return Ok(_adminService.Login(request));
+            var dto = await _adminService.Login(request);
+            return Ok(dto);
         }
 
         [HttpPut("{id}"), Authorize(Roles = "Admin")]
-        public ActionResult UpdatePassword(string id, PasswordRequest request)
+        public async Task<ActionResult> UpdatePassword(string id, PasswordRequest request)
         {
-            bool successful = _adminService.UpdatePassword(id, request);
+            var successful = await _adminService.UpdatePassword(id, request);
             if (successful)
-                return Ok();
+                return Ok(new { message = "Password updated" });
 
             return BadRequest("The old password is different");
         }

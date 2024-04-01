@@ -1,11 +1,10 @@
 ﻿using Microsoft.IdentityModel.Tokens;
-using MongoDB.Driver;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
 using MotorcycleDeliveryRentWebAPI.Api.Validators;
+using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
-using MotorcycleDeliveryRentWebAPI.Infra.Config;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -14,63 +13,67 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 {
     public class AdminService : IAdminService
     {
-        private readonly IMongoCollection<AdminModel> _context;
+        private readonly IAdminRepository _repository;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AdminModel> _logger;
 
-        public AdminService(IMongoDBSettings settings, IMongoClient mongoClient, IConfiguration configuration, ILogger<AdminModel> logger)
+        public AdminService(IAdminRepository adminRepository, IConfiguration configuration, ILogger<AdminModel> logger)
         {
-            var database = mongoClient.GetDatabase(settings.DatabaseName);
-            _context = database.GetCollection<AdminModel>("Admin");
+            _repository = adminRepository;
             _configuration = configuration;
             _logger = logger;
         }
 
-        public List<AdminDTO> GetAll()
+        public async Task<List<AdminDTO>> GetAllAsync()
         {
-            return AdminDTO.Convert(_context.Find(x => true).ToList());
+            var model = _repository.GetAll();
+            return await AdminDTO.Convert(model);
         }
 
-        public AdminDTO GetById(string id)
+        public async Task<AdminDTO> GetByIdAsync(string id)
         {
-            AdminModel model = _context.Find(x => x.Id == id).FirstOrDefault();
+            AdminModel model = await _repository.GetById(id);
             if (model != null)
-                return AdminDTO.Convert(model);
+                return await AdminDTO.Convert(model);
 
             _logger.LogDebug($"Admin with Id = {id} not found");
             return null;
         }
 
-        public AdminDTO GetByEmail(string email)
+        public async Task<AdminDTO> GetByEmailAsync(string email)
         {
+            AdminModel model = await _repository.GetByEmail(email);
 
-            AdminModel model = _context.Find(x => x.Email == email).FirstOrDefault();
             if (model != null)
-                return AdminDTO.Convert(model);
+                return await AdminDTO.Convert(model);
 
             _logger.LogError($"Admin with E-mail = {email} not found");
-            throw new Exception($"Admin with E-mail = {email} not found");
+            return null;
         }
 
-        public AdminDTO Create(LoginAdminDriverRequest request)
+        public async Task<AdminDTO> CreateAsync(LoginAdminDriverRequest request)
         {
             ValidatorAdminDriver.Password(request.Password);
             ValidatorAdminDriver.Email(request.Email);
-            if (_context.Find(delivery => delivery.Email == request.Email).FirstOrDefault() != null)
+            var email = await GetByEmailAsync(request.Email);
+
+            if (email != null)
             {
                 _logger.LogError($"The E-mail must be unique, E-mail = {request.Email}");
                 throw new Exception($"The E-mail must be unique, E-mail = {request.Email}");
             }
 
-            AdminModel adminModel = LoginAdminDriverRequest.ConvertAdmin(request);
-
-            _context.InsertOne(adminModel);
-            return AdminDTO.Convert(adminModel);
+            AdminModel model = LoginAdminDriverRequest.ConvertAdmin(request);
+            await _repository.CreateAsync(model);
+            return await AdminDTO.Convert(model);
         }
 
-        public string Login(LoginAdminDriverRequest request)
+        public async Task<string> Login(LoginAdminDriverRequest request)
         {
-            AdminModel model = _context.Find(x => x.Email == request.Email).FirstOrDefault() ?? throw new Exception($"Admin with E-mail = {request.Email} not found");
+            AdminModel model = await _repository.GetByEmail(request.Email);
+
+            if (model == null)
+                throw new Exception($"Admin with E-mail = {request.Email} not found");
 
             if (model.Email != request.Email)
                 throw new Exception("E-mail not found");
@@ -81,16 +84,19 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             return CreateToken(model);
         }
 
-        public bool UpdatePassword(string id, PasswordRequest request)
+        public async Task<bool> UpdatePassword(string id, PasswordRequest request)
         {
             ValidatorAdminDriver.Password(request.OldPassword);
-            AdminModel model = GetByIdModel(id);
+            AdminModel model = await GetByIdModel(id);
+
+            if (model == null)
+                return false;
 
             if (!BCrypt.Net.BCrypt.Verify(request.OldPassword, model.Password))
                 return false;
 
             model = PasswordRequest.ConvertAdmin(model, request);
-            _context.ReplaceOne(x => x.Id == id, model);
+            await _repository.UpdateAsync(id, model);
             return true;
         }
 
@@ -119,14 +125,14 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             return jwt;
         }
 
-        public AdminModel GetByIdModel(string id)
+        public Task<AdminModel> GetByIdModel(string id)
         {
-            return _context.Find(x => x.Id == id).FirstOrDefault() ?? throw new Exception($"Admin with Id = {id} not found");
+            return _repository.GetById(id) ?? throw new Exception($"Admin with Id = {id} not found");
         }
 
-        public AdminModel GetByEmailModel(string email)
+        public Task<AdminModel> GetByEmailModel(string email)
         {
-            return _context.Find(x => x.Email == email).FirstOrDefault() ?? throw new Exception($"Admin with E-mail = {email} not found");
+            return _repository.GetByEmail(email) ?? throw new Exception($"Admin with E-mail = {email} not found");
         }
     }
 }

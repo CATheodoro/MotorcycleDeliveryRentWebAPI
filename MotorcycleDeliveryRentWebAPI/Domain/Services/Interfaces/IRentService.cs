@@ -1,13 +1,16 @@
-﻿using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
+﻿using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
+using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
 
 namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
 {
     public interface IRentService
     {
-        public List<RentDTO> GetAll();
-        public RentDTO GetById(string id);
-        public List<RentDTO> GetByDriverId(string driverId);
-        public RentDTO Create(string id);
-        public bool Update(string id);
+        public Task<List<RentDTO>> GetAllAsync();
+        public Task<RentDTO> GetByIdAsync(string id);
+        public Task<List<RentDTO>> GetByDriverIdAsync(string driverId);
+        public Task<Task<RentDTO>> CreateAsync(string id);
+        public Task<bool> UpdateAsync(string id);
+        public Task<RentModel> GetByIdModel(string id);
+        public Task<List<RentModel>> GetByDriverIdModel(string driverId);
     }
 }

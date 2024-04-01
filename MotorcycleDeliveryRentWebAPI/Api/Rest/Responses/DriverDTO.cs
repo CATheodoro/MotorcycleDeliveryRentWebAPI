@@ -14,8 +14,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
         public CnhTypeEnum CnhType { get; set; }
         public DriverStatusEnum Status { get; set; }
 
-        internal static List<DriverDTO> Convert(List<DriverModel> models)
+        internal static async Task<List<DriverDTO>> Convert(Task<List<DriverModel>> task)
         {
+            List<DriverModel> models = await task;
             List<DriverDTO> dtos = new List<DriverDTO>();
 
             foreach (var model in models)
@@ -37,7 +38,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
             return dtos;
         }
 
-        internal static DriverDTO Convert(DriverModel model)
+        internal static async Task<DriverDTO> Convert(DriverModel model)
         {
             DriverDTO dto = new DriverDTO();
             dto.Id = model.Id;

@@ -10,8 +10,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
         public int TotalDay { get; set; }
         public int PenaltyPercentage { get; set; }
 
-        internal static List<PlanDTO> Convert(List<PlanModel> models)
+        internal static async Task<List<PlanDTO>> Convert(Task<List<PlanModel>> task)
         {
+            List<PlanModel> models = await task;
             List<PlanDTO> dtos = new List<PlanDTO>();
 
             foreach (var model in models)
@@ -30,7 +31,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
             return dtos;
         }
 
-        internal static PlanDTO Convert(PlanModel model)
+        internal static async Task<PlanDTO> Convert(PlanModel model)
         {
             PlanDTO dto = new PlanDTO();
             dto.Id = model.Id;

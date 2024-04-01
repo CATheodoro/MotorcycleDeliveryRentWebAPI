@@ -3,6 +3,7 @@ using MotorcycleDeliveryRentWebAPI.Api.Rest.Enums;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
+using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Infra.Config;
 using System.Security.Claims;
@@ -11,18 +12,17 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 {
     public class DeliveryService : IDeliveryService
     {
-        private readonly IMongoCollection<DeliveryModel> _context;
+        private readonly IDeliveryRepository _repository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAdminService _adminService;
         private readonly IDriverService _driverService;
         private readonly INotificationService _notificationService;
         private readonly ILogger<DeliveryModel> _logger;
 
-        public DeliveryService(IMongoDBSettings settings, IMongoClient mongoClient, IHttpContextAccessor httpContextAccessor,
-            IAdminService adminService, IDriverService driverService, INotificationService notificationService, ILogger<DeliveryModel> logger)
+        public DeliveryService(IDeliveryRepository deliveryRepository, IHttpContextAccessor httpContextAccessor,IAdminService adminService, IDriverService driverService,
+            INotificationService notificationService, ILogger<DeliveryModel> logger)
         {
-            var database = mongoClient.GetDatabase(settings.DatabaseName);
-            _context = database.GetCollection<DeliveryModel>("Delivery");
+            _repository = deliveryRepository;
             _httpContextAccessor = httpContextAccessor;
             _adminService = adminService;
             _driverService = driverService;
@@ -30,46 +30,46 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             _logger = logger;
         }
 
-        public List<DeliveryDTO> GetAll()
+        public async Task<List<DeliveryDTO>> GetAllAsync()
         {
-            return DeliveryDTO.Convert(_context.Find(x => true).ToList()); ;
+            var model = _repository.GetAll();
+            return await DeliveryDTO.Convert(model);
         }
 
-        public DeliveryDTO GetById(string id)
+        public async Task<DeliveryDTO> GetByIdAsync(string id)
         {
-            DeliveryModel model = _context.Find(x => x.Id == id).FirstOrDefault();
+            DeliveryModel model = await _repository.GetById(id);
             if (model != null)
-                return DeliveryDTO.Convert(model);
+                return await DeliveryDTO.Convert(model);
 
             _logger.LogDebug($"Delivery id = {id} not found");
             return null;
         }
 
-        public List<DeliveryDTO> GetByDriverNotification()
-        {
-            return DeliveryDTO.Convert(_context.Find(x => true).ToList());
-        }
+        //public List<DeliveryDTO> GetByDriverNotification()
+        //{
+        //    return DeliveryDTO.Convert(_notificationService.(x => true).ToList());
+        //}
 
-        public DeliveryDTO Create(decimal price)
-        {
-            var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            AdminModel admin = _adminService.GetByEmailModel(email);
-            DeliveryModel delivery = DeliveryRequest.Convert(admin.Id, DateTime.UtcNow, price, DeliveryStatusEnum.Available);
-
-            _notificationService.PublishNewDeliveryNotification(delivery.Id);
-            _context.InsertOne(delivery);
-
-            return DeliveryDTO.Convert(delivery);
-        }
-
-        public bool Accept(string id)
+        public async Task<DeliveryDTO> CreateAsync(decimal price)
         {
             var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            DriverModel driver = _driverService.GetByEmailModel(email);
+            Task<AdminModel> admin = _adminService.GetByEmailModel(email);
+            DeliveryModel model = DeliveryRequest.Convert(admin.Result.Id, DateTime.UtcNow, price, DeliveryStatusEnum.Available);
 
-            DeliveryModel delivery = GetByIdModel(id);
+            _notificationService.PublishNewDeliveryNotification(model.Id);
+            await _repository.CreateAsync(model);
+            return await DeliveryDTO.Convert(model);
+        }
 
-            if (delivery.Id != id)
+        public async Task<bool> AcceptAsync(string id)
+        {
+            var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
+            DriverModel driver = await _driverService.GetByEmailModel(email);
+
+            DeliveryModel model = await GetByIdModel(id);
+
+            if (model.Id != id)
             {
                 _logger.LogError("Delivery has different driver");
                 throw new Exception("Delivery has different driver");
@@ -80,22 +80,22 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
                 _logger.LogError("Driver must be available");
                 throw new Exception("Driver must be available");
             }
-            _notificationService.PublishDeliveryAcceptance(delivery.Id, driver.Id);
+            _notificationService.PublishDeliveryAcceptance(model.Id, driver.Id);
             _driverService.UpdateStatus(driver.Id, DriverStatusEnum.Unavailable);
 
-            delivery = DeliveryRequest.ConvertAccept(delivery, driver.Id, DateTime.UtcNow, DeliveryStatusEnum.Accepted);
-            _context.ReplaceOne(x => x.Id == id, delivery);
+            model = DeliveryRequest.ConvertAccept(model, driver.Id, DateTime.UtcNow, DeliveryStatusEnum.Accepted);
+            await _repository.UpdateAsync(id, model);
             return true;
         }
 
-        public bool Delivery(string id)
+        public async Task<bool> DeliveryAsync(string id)
         {
             var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            DriverModel driver = _driverService.GetByEmailModel(email);
+            DriverModel driver = await _driverService.GetByEmailModel(email);
 
-            DeliveryModel delivery = GetByIdModel(id);
+            DeliveryModel model = await GetByIdModel(id);
 
-            if (delivery.DriverId != driver.Id)
+            if (model.DriverId != driver.Id)
             {
                 _logger.LogError("Different drivers");
                 throw new Exception("Different drivers");
@@ -103,49 +103,44 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 
             _driverService.UpdateStatus(driver.Id, DriverStatusEnum.Available);
 
-            delivery = DeliveryRequest.ConvertDelivery(delivery, DateTime.UtcNow, DeliveryStatusEnum.Delivered);
-            _context.ReplaceOne(x => x.Id == id, delivery);
+            model = DeliveryRequest.ConvertDelivery(model, DateTime.UtcNow, DeliveryStatusEnum.Delivered);
+            await _repository.UpdateAsync(id, model);
             return true;
         }
 
-        public bool Cancel(string id)
+        public async Task<bool> CancelAsync(string id)
         {
             var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            AdminModel admin = _adminService.GetByEmailModel(email);
+            Task<AdminModel> admin = _adminService.GetByEmailModel(email);
 
-            DeliveryModel model = GetByIdModel(id);
-            if (model.AdminId != admin.Id)
+            DeliveryModel model = await GetByIdModel(id);
+            if (model.AdminId != admin.Result.Id)
             {
                 _logger.LogError("Different users");
                 throw new Exception("Different users");
             }
-            if (model.Status != DeliveryStatusEnum.Delivered)
-            {
-                _logger.LogError("Cannot cancel finished race");
-                throw new Exception("Cannot cancel finished race");
-            }
-
-            _driverService.UpdateStatus(model.DriverId, DriverStatusEnum.Available);
 
             if (model.Status == DeliveryStatusEnum.Delivered || model.Status == DeliveryStatusEnum.Canceled)
             {
                 _logger.LogInformation("A race has already ended or been canceled");
                 return false;
             }
-            
+
+            _driverService.UpdateStatus(model.DriverId, DriverStatusEnum.Available);
+
             model = DeliveryRequest.ConvertDelivery(model, DateTime.UtcNow, DeliveryStatusEnum.Canceled);
-            _context.ReplaceOne(x => x.Id == id, model);
+            await _repository.UpdateAsync(id, model);
             return true;
         }
 
-        public DeliveryModel GetByIdModel(string id)
+        public async Task<DeliveryModel> GetByIdModel(string id)
         {
-            return _context.Find(x => x.Id == id).FirstOrDefault() ?? throw new Exception($"Delivery id = {id} not found");
+            return await _repository.GetById(id) ?? throw new Exception($"Delivery id = {id} not found");
         }
 
-        public List<DeliveryModel> GetByDriverNotificationModel()
-        {
-            return _context.Find(x => true).ToList();
-        }
+        //public async Task<List<DeliveryModel>> GetByDriverNotificationModel()
+        //{
+        //    return await _repository.GetAll();
+        //}
     }
 }

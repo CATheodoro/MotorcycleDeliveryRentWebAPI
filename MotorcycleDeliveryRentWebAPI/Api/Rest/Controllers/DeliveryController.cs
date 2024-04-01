@@ -16,49 +16,49 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
             _deliveryService = deliveryService;
         }
 
-
         [HttpGet]
-        public ActionResult<List<DeliveryDTO>> GetAll()
+        public async Task<ActionResult<DeliveryDTO>> GetAll()
         {
-            return Ok(_deliveryService.GetAll());
+            var deliverys = await _deliveryService.GetAllAsync();
+            return Ok(deliverys);
         }
 
         [HttpGet("{id}")]
-        public ActionResult<DeliveryDTO> GetById(string id)
+        public async Task<ActionResult<DeliveryDTO>> GetById(string id)
         {
-            DeliveryDTO dto = _deliveryService.GetById(id);
+            DeliveryDTO dto = await _deliveryService.GetByIdAsync(id);
             if (dto != null)
                 return Ok(dto);
 
             return NotFound($"Delivery id = {id} not found");
         }
 
-        [HttpGet("Notification")]
-        public ActionResult<DeliveryDTO> GetByDriverNotification()
-        {
-            return Ok(_deliveryService.GetByDriverNotification());
-        }
+        //[HttpGet("Notification")]
+        //public async Task<ActionResult<DeliveryDTO>> GetByDriverNotification()
+        //{
+        //    return Ok(_deliveryService.GetByDriverNotification());
+        //}
 
         [HttpPost, Authorize(Roles = "Admin")]
-        public ActionResult<DeliveryDTO> Create([FromBody] decimal price)
+        public async Task<ActionResult<DeliveryDTO>> Create([FromBody] decimal price)
         {
-            DeliveryDTO delivery = _deliveryService.Create(price);
+            DeliveryDTO delivery = await _deliveryService.CreateAsync(price);
             return CreatedAtAction(nameof(GetAll), new { id = delivery.Id }, delivery);
         }
 
         [HttpPut("Accept/{id}"), Authorize(Roles = "User")]
-        public ActionResult Accept(string id)
+        public async Task<ActionResult> Accept(string id)
         {
-            bool successful = _deliveryService.Accept(id);
+            bool successful = await _deliveryService.AcceptAsync(id);
             if (successful)
                 return Ok(new { message = "Race accepted" });
             return NotFound();
         }
 
         [HttpPut("Delivery/{id}"), Authorize(Roles = "User")]
-        public ActionResult Delivery(string id)
+        public async Task<ActionResult> Delivery(string id)
         {
-            bool successful = _deliveryService.Delivery(id);
+            bool successful = await _deliveryService.DeliveryAsync(id);
             if (successful)
                 return Ok(new { message = "Race delivered" });
 
@@ -66,9 +66,9 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPut("Cancel/{id}"), Authorize(Roles = "Admin")]
-        public ActionResult Cancel(string id)
+        public async Task<ActionResult> Cancel(string id)
         {
-            bool successful = _deliveryService.Cancel(id);
+            bool successful = await _deliveryService.CancelAsync(id);
             if (successful)
                 return Ok(new { message = "Race Canceled" });
 

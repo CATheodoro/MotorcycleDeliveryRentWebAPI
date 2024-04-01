@@ -6,10 +6,10 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
 {
     public interface IPlanService
     {
-        public List<PlanDTO> GetAll();
-        public PlanDTO GetById(string id);
-        public PlanDTO Create(PlanRequest request);
-        public bool Update(string id, PlanRequest request);
-        public PlanModel GetByIdModel(string id);
+        public Task<List<PlanDTO>> GetAllAsync();
+        public Task<PlanDTO> GetByIdAsync(string id);
+        public Task<PlanDTO> CreateAsync(PlanRequest request);
+        public Task<bool> UpdateAsync(string id, PlanRequest request);
+        public Task<PlanModel> GetByIdModel(string id);
     }
 }
