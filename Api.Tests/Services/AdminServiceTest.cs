@@ -18,7 +18,7 @@ namespace Api.Tests.Services
         Mock<ILogger<AdminModel>> _adminLoggerMock = new Mock<ILogger<AdminModel>>();
         Mock<IAdminRepository> _adminRepositoryMock = new Mock<IAdminRepository>();
 
-        [Fact]
+        [Fact(DisplayName = "Get all admin: return list Success")]
         public async Task GetAllAsync_ReturnsAdminDTOList()
         {
             var adminModels = new List<AdminModel>
@@ -38,7 +38,7 @@ namespace Api.Tests.Services
             Assert.Equal(adminModels.Count, result.Count);
         }
 
-        [Fact]
+        [Fact(DisplayName = "Create admin Success")]
         public async Task CreateAsync_ValidRequest_ReturnsAdminDTO()
         {
             var adminModels = new List<AdminModel>
@@ -64,7 +64,7 @@ namespace Api.Tests.Services
 
         }
 
-        [Fact]
+        [Fact(DisplayName = "Create admin error: e-mail must be unique")]
         public async Task CreateAsync_DuplicateEmail_ThrowsException()
         {
             var adminModel = new AdminModel
