@@ -73,7 +73,7 @@ docker-compose up --build
 This command will build and start the necessary Docker containers to run the application.
 
 
-## Get Start Souce Code
+## Get Start Source Code
 To get started, clone the application repository by running the following command in your terminal:
 ```Git Clone
 git clone https://github.com/MatheusMGrassano/RentalWebAPI.git
