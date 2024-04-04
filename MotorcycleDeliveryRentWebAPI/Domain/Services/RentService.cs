@@ -15,10 +15,10 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
         private readonly IMotorcycleService _motorcycleService;
         private readonly IDriverService _driverService;
         private readonly IPlanService _planService;
-        private readonly ILogger<RentModel> _logger;
+        private readonly ILogger<RentService> _logger;
 
         public RentService(IRentRepository rentRepository, IHttpContextAccessor httpContextAccessor,
-            IMotorcycleService motorcycleService, IDriverService driverService, IPlanService planService, ILogger<RentModel> logger)
+            IMotorcycleService motorcycleService, IDriverService driverService, IPlanService planService, ILogger<RentService> logger)
         {
             _repository = rentRepository;
             _httpContextAccessor = httpContextAccessor;
@@ -56,8 +56,8 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 
         public async Task<Task<RentDTO>> CreateAsync(string id)
         {
-            var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            DriverModel driver = await _driverService.GetByEmailModel(email);
+            var nameIdentifier = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            DriverModel driver = await _driverService.GetByIdModel(nameIdentifier);
 
             if (driver.CnhType == CnhTypeEnum.B)
             {

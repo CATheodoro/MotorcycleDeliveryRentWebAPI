@@ -10,6 +10,7 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
+using MotorcycleDeliveryRentWebAPI.Infra.JWT;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,8 @@ builder.Services.AddLogging();
 
 builder.Services.AddScoped<IMotorcycleRepository, MotorcycleRepository>();
 builder.Services.AddScoped<IMotorcycleService, MotorcycleService>();
+
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<ICnhImageRepository, CnhImageRepository>();

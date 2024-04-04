@@ -9,9 +9,9 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
     public class PlanService : IPlanService
     {
         private readonly IPlanRepository _repository;
-        private readonly ILogger<PlanModel> _logger;
+        private readonly ILogger<PlanService> _logger;
 
-        public PlanService(IPlanRepository planRepository, ILogger<PlanModel> logger)
+        public PlanService(IPlanRepository planRepository, ILogger<PlanService> logger)
         {
             _repository = planRepository;
             _logger = logger;

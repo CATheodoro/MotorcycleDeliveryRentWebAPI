@@ -14,9 +14,9 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
         private readonly INotificationRepository _repository;
         private readonly IConnection _connection;
         private readonly IModel _channel;
-        private readonly ILogger<NotificationModel> _logger;
+        private readonly ILogger<NotificationService> _logger;
 
-        public NotificationService(INotificationRepository notificationRepository, ILogger<NotificationModel> logger)
+        public NotificationService(INotificationRepository notificationRepository, ILogger<NotificationService> logger)
         {
 
             _repository = notificationRepository;

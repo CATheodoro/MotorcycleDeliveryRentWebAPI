@@ -20,6 +20,7 @@ namespace Api.Tests.Services
         Mock<ILogger<AdminModel>> _adminLoggerMock = new Mock<ILogger<AdminModel>>();
         Mock<IAdminRepository> _adminRepositoryMock = new Mock<IAdminRepository>();
         Mock<IConfiguration> _configuration = new Mock<IConfiguration>();
+        Mock<ITokenService> _TokenService = new Mock<ITokenService>();
 
         [Fact(DisplayName = "Get all admin: return list Success")]
         public async Task GetAllAsync_ReturnsAdminDTOList()
@@ -54,7 +55,7 @@ namespace Api.Tests.Services
 
             AdminService adminService = new AdminService(_adminRepositoryMock.Object, null, _adminLoggerMock.Object);
 
-            var newAdmin = new LoginAdminDriverRequest
+            var newAdmin = new AdminRequest
             {
                 Email = "newAdmin@email.com",
                 Password = "Password@123"
@@ -70,7 +71,7 @@ namespace Api.Tests.Services
         [Fact(DisplayName = "Admin logged Success")]
         public async Task Login_Successful()
         {
-            var loginRequest = new LoginAdminDriverRequest
+            var loginRequest = new LoginRequest
             {
                 Email = "admin1@example.com",
                 Password = "Password@123"
@@ -80,7 +81,8 @@ namespace Api.Tests.Services
             {
                 Id = "660ac4ad9c1212e693221c0f",
                 Email = "admin1@example.com",
-                Password = BCrypt.Net.BCrypt.HashPassword("Password@123")
+                Password = BCrypt.Net.BCrypt.HashPassword("Password@123"),
+                Rule = new List<string> { "Admin" }
             };
 
             _configuration.Setup(x => x.GetSection("AppSettings:Token").Value)
@@ -88,7 +90,9 @@ namespace Api.Tests.Services
 
             _adminRepositoryMock.Setup(repo => repo.GetByEmail(loginRequest.Email)).ReturnsAsync(adminModel);
 
-            AdminService adminService = new AdminService(_adminRepositoryMock.Object, _configuration.Object, _adminLoggerMock.Object);
+            _TokenService.Setup(x => x.CreateToken(adminModel.Id, adminModel.Email, adminModel.Rule)).Returns("teste");
+
+            AdminService adminService = new AdminService(_adminRepositoryMock.Object, _TokenService.Object, _adminLoggerMock.Object);
 
             var token = await adminService.Login(loginRequest);
 
@@ -104,17 +108,23 @@ namespace Api.Tests.Services
                 Email = "admin1@example.com"
             };
 
-            var loginAdminDriverRequest = new LoginAdminDriverRequest
+            var loginRequest = new LoginRequest
             {
                 Email = "admin1@example.com",
                 Password = "Password@123"
             };
 
-            _adminRepositoryMock.Setup(repo => repo.GetByEmail(loginAdminDriverRequest.Email)).ReturnsAsync(adminModel);
+            var adminRequest = new AdminRequest
+            {
+                Email = "admin1@example.com",
+                Password = "Password@123"
+            };
+
+            _adminRepositoryMock.Setup(repo => repo.GetByEmail(loginRequest.Email)).ReturnsAsync(adminModel);
 
             AdminService adminService = new AdminService(_adminRepositoryMock.Object, null, _adminLoggerMock.Object);
 
-            var exception = await Assert.ThrowsAsync<Exception>(async () => await adminService.CreateAsync(loginAdminDriverRequest));
+            var exception = await Assert.ThrowsAsync<Exception>(async () => await adminService.CreateAsync(adminRequest));
             Assert.Equal("The E-mail must be unique, E-mail = admin1@example.com", exception.Message);
         }
     }

@@ -24,6 +24,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Requests
             model.BirthDate = request.BirthDate;
             model.Cnh = request.Cnh;
             model.Status = DriverStatusEnum.Available;
+            model.Rule = new List<string> { "User" };
             return model;
         }
     }
