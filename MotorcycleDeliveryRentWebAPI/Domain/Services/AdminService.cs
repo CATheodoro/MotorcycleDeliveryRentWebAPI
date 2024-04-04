@@ -64,7 +64,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             return await AdminDTO.Convert(model);
         }
 
-        public async Task<string> Login(LoginRequest request)
+        public async Task<TokenDTO> Login(LoginRequest request)
         {
             AdminModel model = await _repository.GetByEmail(request.Email);
 

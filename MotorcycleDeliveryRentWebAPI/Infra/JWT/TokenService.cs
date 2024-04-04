@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
+using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
@@ -19,7 +20,7 @@ namespace MotorcycleDeliveryRentWebAPI.Infra.JWT
             _logger = logger;
         }
 
-        public string CreateToken(string id, string email, List<string> roles)
+        public TokenDTO CreateToken(string id, string email, List<string> roles)
         {
             List<Claim> claims = new List<Claim> {
                 new Claim(ClaimTypes.NameIdentifier, id),
@@ -41,10 +42,9 @@ namespace MotorcycleDeliveryRentWebAPI.Infra.JWT
                     signingCredentials: creds
                 );
 
-            var jwt = "Bearer " + new JwtSecurityTokenHandler().WriteToken(token);
             _logger.LogDebug($"Rule = {roles} with Id = {id} logged");
 
-            return jwt;
+            return new TokenDTO(email, roles, new JwtSecurityTokenHandler().WriteToken(token));
         }
     }
 }

@@ -170,7 +170,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             return true;
         }
 
-        public async Task<string> LoginAsync(LoginRequest request)
+        public async Task<TokenDTO> LoginAsync(LoginRequest request)
         {
             DriverModel model = await GetByEmailModel(request.Email);
 

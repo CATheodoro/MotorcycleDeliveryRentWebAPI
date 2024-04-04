@@ -1,7 +1,9 @@
-﻿namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
+﻿using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
+
+namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
 {
     public interface ITokenService
     {
-        public string CreateToken(string id, string email, List<string> rules);
+        public TokenDTO CreateToken(string id, string email, List<string> rules);
     }
 }

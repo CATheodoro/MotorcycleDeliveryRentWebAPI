@@ -43,7 +43,7 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task<ActionResult> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<TokenDTO>> Login([FromBody] LoginRequest request)
         {
             var dto = await _adminService.Login(request);
             return Ok(dto);
