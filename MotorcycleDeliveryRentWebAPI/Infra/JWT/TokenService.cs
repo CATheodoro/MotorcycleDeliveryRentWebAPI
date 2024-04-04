@@ -12,8 +12,8 @@ namespace MotorcycleDeliveryRentWebAPI.Infra.JWT
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
-        private readonly ILogger<TokenModel> _logger;
-        public TokenService(IAdminRepository adminRepository, IConfiguration configuration, ILogger<TokenModel> logger)
+        private readonly ILogger<TokenService> _logger;
+        public TokenService(IAdminRepository adminRepository, IConfiguration configuration, ILogger<TokenService> logger)
         {
             _configuration = configuration;
             _logger = logger;
