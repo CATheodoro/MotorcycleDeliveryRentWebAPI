@@ -9,6 +9,7 @@ using MotorcycleDeliveryRentWebAPI.Domain.Services;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace Api.Tests.Services
 {
     public class AdminServiceTests
     {
-        Mock<ILogger<AdminModel>> _adminLoggerMock = new Mock<ILogger<AdminModel>>();
+        Mock<ILogger<AdminService>> _adminLoggerMock = new Mock<ILogger<AdminService>>();
         Mock<IAdminRepository> _adminRepositoryMock = new Mock<IAdminRepository>();
         Mock<IConfiguration> _configuration = new Mock<IConfiguration>();
         Mock<ITokenService> _TokenService = new Mock<ITokenService>();
@@ -85,12 +86,18 @@ namespace Api.Tests.Services
                 Rule = new List<string> { "Admin" }
             };
 
+            var returnToken = new TokenDTO(
+                email: "admin1@example.com",
+                roles: new List<string> { "Admin" },
+                accessToken: "eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTUxMiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjY2MGYwYjk2ZTE2ZDBkNzIyYTlkNzI1ZCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImVtYWlsMTIzMzIxQGdtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6WyJBZG1pbiIsInRlc3RlIl0sImV4cCI6MTcxMjM1MTgwOH0.GriOif3YmpwVPih3l86trmD9U1L1bxxPPE_JhTXp9Jef3kylGKGGd2CfZlkb56jaJ4BoGIz2pqsoXss0SIFpoQ"
+            );
+
             _configuration.Setup(x => x.GetSection("AppSettings:Token").Value)
                          .Returns("bwO5R0iQNZt+9NVIt4AeQplO9JysBrs/Ugr/d7l0j3g=bwO5R0iQNZt+9NVIt4AeQplO9JysBrs/Ugr/d7l0j3g=");
 
             _adminRepositoryMock.Setup(repo => repo.GetByEmail(loginRequest.Email)).ReturnsAsync(adminModel);
 
-            _TokenService.Setup(x => x.CreateToken(adminModel.Id, adminModel.Email, adminModel.Rule)).Returns("teste");
+            _TokenService.Setup(x => x.CreateToken(adminModel.Id, adminModel.Email, adminModel.Rule)).Returns(returnToken);
 
             AdminService adminService = new AdminService(_adminRepositoryMock.Object, _TokenService.Object, _adminLoggerMock.Object);
 
