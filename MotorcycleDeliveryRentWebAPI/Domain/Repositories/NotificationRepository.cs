@@ -1,7 +1,7 @@
 ﻿using MongoDB.Driver;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
-using MotorcycleDeliveryRentWebAPI.Infra.Config;
+using MotorcycleDeliveryRentWebAPI.Infra.Config.Interfaces;
 
 namespace MotorcycleDeliveryRentWebAPI.Domain.Repositories
 {

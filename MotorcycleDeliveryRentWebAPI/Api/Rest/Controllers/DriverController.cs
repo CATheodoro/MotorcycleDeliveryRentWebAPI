@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
-using MotorcycleDeliveryRentWebAPI.Domain.Services;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
 
 namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers

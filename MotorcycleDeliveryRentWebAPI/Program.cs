@@ -11,6 +11,7 @@ using System.Text;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Infra.JWT;
+using MotorcycleDeliveryRentWebAPI.Infra.Config.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,4 +92,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-

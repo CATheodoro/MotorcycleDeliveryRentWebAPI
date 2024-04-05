@@ -3,7 +3,7 @@ using MotorcycleDeliveryRentWebAPI.Api.Rest.Enums;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
-using MotorcycleDeliveryRentWebAPI.Infra.Config;
+using MotorcycleDeliveryRentWebAPI.Infra.Config.Interfaces;
 
 namespace MotorcycleDeliveryRentWebAPI.Domain.Repositories
 {

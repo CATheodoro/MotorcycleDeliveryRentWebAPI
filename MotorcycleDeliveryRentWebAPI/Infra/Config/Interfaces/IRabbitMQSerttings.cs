@@ -1,4 +1,4 @@
-﻿namespace MotorcycleDeliveryRentWebAPI.Infra.Config
+﻿namespace MotorcycleDeliveryRentWebAPI.Infra.Config.Interfaces
 {
     public class IRabbitMQSerttings
     {

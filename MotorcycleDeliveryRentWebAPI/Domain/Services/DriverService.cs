@@ -49,6 +49,9 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
         public async Task<List<DriverDTO>> GetByStatusAsync(DriverStatusEnum status)
         {
             var model = _repository.GetByStatus(status);
+            if (model == null)
+                throw new Exception("There are no drivers available");
+
             return await DriverDTO.Convert(model);
         }
 

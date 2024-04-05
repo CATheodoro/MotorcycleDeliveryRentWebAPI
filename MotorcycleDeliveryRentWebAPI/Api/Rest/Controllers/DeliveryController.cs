@@ -33,12 +33,6 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
             return NotFound($"Delivery id = {id} not found");
         }
 
-        //[HttpGet("Notification")]
-        //public async Task<ActionResult<DeliveryDTO>> GetByDriverNotification()
-        //{
-        //    return Ok(_deliveryService.GetByDriverNotification());
-        //}
-
         [HttpPost, Authorize(Roles = "Admin")]
         public async Task<ActionResult<DeliveryDTO>> Create([FromBody] decimal price)
         {

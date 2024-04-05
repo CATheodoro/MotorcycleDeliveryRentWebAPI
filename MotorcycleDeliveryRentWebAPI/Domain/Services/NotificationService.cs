@@ -1,6 +1,4 @@
-﻿using MongoDB.Driver;
-using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
-using MotorcycleDeliveryRentWebAPI.Domain.Repositories;
+﻿using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Infra.Config;
@@ -36,7 +34,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             _channel = _connection.CreateModel();
         }
 
-        public void PublishNewDeliveryNotification(string deliveryId)
+        public void PublishNewDeliveryNotification(string deliveryId, string adminId, string driverId)
         {
             _channel.QueueDeclare(queue: "new_delivery_notifications",
                                   durable: false,
@@ -44,7 +42,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
                                   autoDelete: false,
                                   arguments: null);
 
-            string message = $"New delivery created: {deliveryId}, {DateTime.UtcNow}";
+            string message = $"New delivery created {deliveryId} by Admin: {adminId}, Driver: {driverId} was notified, {DateTime.UtcNow}";
             var body = Encoding.UTF8.GetBytes(message);
 
             _channel.BasicPublish(exchange: "",
@@ -57,7 +55,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             _repository.Create(model);
         }
 
-        public void PublishDeliveryAcceptance(string deliveryId, string driverId)
+        public void PublishDeliveryAcceptance(string deliveryId, string adminId, string driverId)
         {
             _channel.QueueDeclare(queue: "delivery_acceptances",
                                   durable: false,
@@ -65,7 +63,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
                                   autoDelete: false,
                                   arguments: null);
 
-            string message = $"Delivery {deliveryId} accepted by driver {driverId}, {DateTime.UtcNow}";
+            string message = $"Delivery {deliveryId}, create by admin: {adminId}, accepted by driver {driverId}, {DateTime.UtcNow}";
             var body = Encoding.UTF8.GetBytes(message);
 
             _channel.BasicPublish(exchange: "",

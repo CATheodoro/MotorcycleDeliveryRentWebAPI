@@ -1,5 +1,4 @@
-﻿using MongoDB.Driver;
-using MotorcycleDeliveryRentWebAPI.Api.Rest.Enums;
+﻿using MotorcycleDeliveryRentWebAPI.Api.Rest.Enums;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
@@ -45,19 +44,21 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             return null;
         }
 
-        //public List<DeliveryDTO> GetByDriverNotification()
-        //{
-        //    return DeliveryDTO.Convert(_notificationService.(x => true).ToList());
-        //}
-
         public async Task<DeliveryDTO> CreateAsync(decimal price)
         {
             var nameIdentifier = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            Task<AdminModel> admin = _adminService.GetByIdModel(nameIdentifier);
-            DeliveryModel model = DeliveryRequest.Convert(admin.Result.Id, DateTime.UtcNow, price, DeliveryStatusEnum.Available);
+            var admin = await _adminService.GetByIdModel(nameIdentifier);
+            DeliveryModel model = DeliveryRequest.Convert(admin.Id, DateTime.UtcNow, price, DeliveryStatusEnum.Available);
 
-            _notificationService.PublishNewDeliveryNotification(model.Id);
+            var drivers = await _driverService.GetByStatusAsync(DriverStatusEnum.Available);
+  
             await _repository.CreateAsync(model);
+
+            foreach (var driver in drivers)
+            {
+                _notificationService.PublishNewDeliveryNotification(model.Id, admin.Id, driver.Id);
+            }
+
             return await DeliveryDTO.Convert(model);
         }
 
@@ -79,7 +80,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
                 _logger.LogError("Driver must be available");
                 throw new Exception("Driver must be available");
             }
-            _notificationService.PublishDeliveryAcceptance(model.Id, driver.Id);
+            _notificationService.PublishDeliveryAcceptance(model.Id, model.AdminId, driver.Id);
             _driverService.UpdateStatus(driver.Id, DriverStatusEnum.Unavailable);
 
             model = DeliveryRequest.ConvertAccept(model, driver.Id, DateTime.UtcNow, DeliveryStatusEnum.Accepted);
@@ -136,10 +137,5 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
         {
             return await _repository.GetById(id) ?? throw new Exception($"Delivery id = {id} not found");
         }
-
-        //public async Task<List<DeliveryModel>> GetByDriverNotificationModel()
-        //{
-        //    return await _repository.GetAll();
-        //}
     }
 }
