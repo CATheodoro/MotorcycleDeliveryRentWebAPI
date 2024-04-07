@@ -54,7 +54,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             return null;
         }
 
-        public async Task<Task<RentDTO>> CreateAsync(string id)
+        public async Task<RentDTO> CreateAsync(string id)
         {
             var nameIdentifier = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             DriverModel driver = await _driverService.GetByIdModel(nameIdentifier);
@@ -79,7 +79,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 
             RentModel rentModel = RentRequest.Convert(driver.Id, motorcycle.Id, plan.Id, startDate, endDate);
             await _repository.CreateAsync(rentModel);
-            return RentDTO.Convert(rentModel);
+            return await RentDTO.Convert(rentModel);
         }
 
         public async Task<bool> UpdateAsync(string id)

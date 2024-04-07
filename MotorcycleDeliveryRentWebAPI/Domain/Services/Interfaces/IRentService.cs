@@ -8,7 +8,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
         public Task<List<RentDTO>> GetAllAsync();
         public Task<RentDTO> GetByIdAsync(string id);
         public Task<List<RentDTO>> GetByDriverIdAsync(string driverId);
-        public Task<Task<RentDTO>> CreateAsync(string id);
+        public Task<RentDTO> CreateAsync(string id);
         public Task<bool> UpdateAsync(string id);
         public Task<RentModel> GetByIdModel(string id);
         public Task<List<RentModel>> GetByDriverIdModel(string driverId);
