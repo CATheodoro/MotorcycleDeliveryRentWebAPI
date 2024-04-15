@@ -1,4 +1,6 @@
-﻿namespace MotorcycleDeliveryRentWebAPI.Infra.Config
+﻿using MotorcycleDeliveryRentWebAPI.Infra.Config.Interfaces;
+
+namespace MotorcycleDeliveryRentWebAPI.Infra.Config
 {
     public class MongoDBSettings : IMongoDBSettings
     {

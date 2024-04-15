@@ -36,14 +36,14 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<AdminDTO>> Create([FromBody] LoginAdminDriverRequest request)
+        public async Task<ActionResult<AdminDTO>> Create([FromBody] AdminRequest request)
         {
             var delivery = await _adminService.CreateAsync(request);
             return CreatedAtAction(nameof(GetAll), new { id = delivery.Id }, delivery);
         }
 
         [HttpPost("Login")]
-        public async Task<ActionResult> Login([FromBody] LoginAdminDriverRequest request)
+        public async Task<ActionResult<TokenDTO>> Login([FromBody] LoginRequest request)
         {
             var dto = await _adminService.Login(request);
             return Ok(dto);

@@ -40,5 +40,8 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Models
 
         [BsonElement("cnhImageId")]
         public string? CnhImageId { get; set; }
+
+        [BsonElement("rule")]
+        public List<string>? Rule { get; set; }
     }
 }

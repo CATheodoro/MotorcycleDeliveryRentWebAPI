@@ -16,7 +16,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces
         public Task<bool> UpdateAsync(string id, DriverUpdateRequest request);
         public Task<bool> UpdatePasswordAsync(string id, PasswordRequest request);
         public Task<bool> UpdateStatus(string id, DriverStatusEnum status);
-        public Task<string> LoginAsync(LoginAdminDriverRequest request);
+        public Task<TokenDTO> LoginAsync(LoginRequest request);
         public Task<bool> UploadCnhImageAsync([FromForm] IFormFile image);
         public Task<DriverModel> GetByIdModel(string id);
         public Task<DriverModel> GetByEmailModel(string email);

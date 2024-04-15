@@ -16,5 +16,8 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Models
         [BsonElement("password")]
         [BsonRequired]
         public string? Password { get; set; }
+
+        [BsonElement("rule")]
+        public List<string>? Rule { get; set; }
     }
 }

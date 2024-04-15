@@ -2,7 +2,7 @@
 {
     public interface INotificationService
     {
-        public void PublishNewDeliveryNotification(string deliveryId);
-        public void PublishDeliveryAcceptance(string deliveryId, string driverId);
+        public void PublishNewDeliveryNotification(string deliveryId, string adminId, string driverId);
+        public void PublishDeliveryAcceptance(string deliveryId, string adminId, string driverId);
     }
 }

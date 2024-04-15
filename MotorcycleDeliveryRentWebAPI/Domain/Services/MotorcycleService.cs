@@ -30,6 +30,8 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
         public async Task<MotorcycleDTO> GetFirstAvailableAsync()
         {
             var model = await _repository.GetFirstAvailable();
+            if (model == null)
+                throw new Exception("Don't have an available motorcycle");
             return await MotorcycleDTO.Convert(model);
         }
 

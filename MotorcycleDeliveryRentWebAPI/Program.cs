@@ -10,6 +10,11 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
+using MotorcycleDeliveryRentWebAPI.Infra.JWT;
+using MotorcycleDeliveryRentWebAPI.Infra.Config.Interfaces;
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +29,8 @@ builder.Services.AddLogging();
 
 builder.Services.AddScoped<IMotorcycleRepository, MotorcycleRepository>();
 builder.Services.AddScoped<IMotorcycleService, MotorcycleService>();
+
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<ICnhImageRepository, CnhImageRepository>();
@@ -70,6 +77,9 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>
     };
 });
 
+ConfigureLogging();
+builder.Host.UseSerilog();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -89,3 +99,34 @@ app.MapControllers();
 
 app.Run();
 
+
+void ConfigureLogging()
+{
+    var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+    var configuration = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .AddJsonFile(
+            $"appsettings.{environment}.json",
+            optional: true)
+        .Build();
+    Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .WriteTo.Debug()
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(ConfigureElasticSink(configuration, environment))
+    .Enrich.WithProperty("Environment", environment)
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
+}
+
+ElasticsearchSinkOptions ConfigureElasticSink(IConfigurationRoot configuration, string environment)
+{
+    return new ElasticsearchSinkOptions(new Uri(configuration["ElasticConfiguration:Uri"]))
+    {
+        AutoRegisterTemplate = true,
+        IndexFormat = $"{Assembly.GetExecutingAssembly().GetName().Name.ToLower().Replace(".", "-")}-{environment?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}",
+        NumberOfReplicas = 1,
+        NumberOfShards = 2
+    };
+}

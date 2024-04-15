@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using MongoDB.Driver;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Enums;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
@@ -8,9 +6,7 @@ using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
 using MotorcycleDeliveryRentWebAPI.Api.Validators;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 {
@@ -18,17 +14,20 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
     {
         private readonly IDriverRepository _repository;
         private readonly ICnhImageRepository _cnhImageRepository;
-        private readonly IConfiguration _configuration;
+        private readonly ITokenService _tokenService;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ILogger<DriverModel> _logger;
+        private readonly ILogger<DriverService> _logger;
+        private readonly IConfiguration _configuration;
 
-        public DriverService(IDriverRepository driverRepository, ICnhImageRepository cnhImageRepository, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ILogger<DriverModel> logger)
+        public DriverService(IDriverRepository driverRepository, ICnhImageRepository cnhImageRepository,
+            ITokenService tokenService, IHttpContextAccessor httpContextAccessor, ILogger<DriverService> logger, IConfiguration configuration)
         {
             _repository = driverRepository;
             _cnhImageRepository = cnhImageRepository;
-            _configuration = configuration;
+            _tokenService = tokenService;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task<List<DriverDTO>> GetAllAsync()
@@ -50,6 +49,9 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
         public async Task<List<DriverDTO>> GetByStatusAsync(DriverStatusEnum status)
         {
             var model = _repository.GetByStatus(status);
+            if (model == null)
+                throw new Exception("There are no drivers available");
+
             return await DriverDTO.Convert(model);
         }
 
@@ -98,8 +100,8 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 
         public async Task<bool> UpdateAsync(string id, DriverUpdateRequest request)
         {
-            var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            DriverModel model = await GetByEmailModel(email);
+            var nameIdentifier = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            DriverModel model = await GetByIdModel(nameIdentifier);
 
             if (id != model.Id)
             {
@@ -148,8 +150,8 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
         {
             ValidatorAdminDriver.Password(request.OldPassword);
 
-            var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            DriverModel model = await GetByEmailModel(email);
+            var nameIdentifier = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            DriverModel model = await GetByIdModel(nameIdentifier);
 
             if (!BCrypt.Net.BCrypt.Verify(request.OldPassword, model.Password))
             {
@@ -171,7 +173,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             return true;
         }
 
-        public async Task<string> LoginAsync(LoginAdminDriverRequest request)
+        public async Task<TokenDTO> LoginAsync(LoginRequest request)
         {
             DriverModel model = await GetByEmailModel(request.Email);
 
@@ -181,39 +183,13 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             if (!BCrypt.Net.BCrypt.Verify(request.Password, model.Password))
                 throw new Exception("Wrong password");
 
-            return CreateToken(model);
-        }
-
-        private string CreateToken(DriverModel model)
-        {
-            List<Claim> claims = new List<Claim> {
-                new Claim(ClaimTypes.NameIdentifier, model.Id),
-                new Claim(ClaimTypes.Email, model.Email),
-                new Claim(ClaimTypes.Role, "User")
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                _configuration.GetSection("AppSettings:Token").Value!));
-
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            JwtSecurityToken token = new JwtSecurityToken(
-                    claims: claims,
-                    expires: DateTime.Now.AddDays(1),
-                    signingCredentials: creds
-                );
-
-            var jwt = "Bearer " + new JwtSecurityTokenHandler().WriteToken(token);
-
-            _logger.LogDebug($"Driver with Id = {model} logged");
-
-            return jwt;
+            return _tokenService.CreateToken(model.Id, model.Email, model.Rule);
         }
 
         public async Task<bool> UploadCnhImageAsync([FromForm] IFormFile image)
         {
-            var email = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            DriverModel model = await GetByEmailModel(email);
+            var nameIdentifier = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            DriverModel model = await GetByIdModel(nameIdentifier);
 
             if (image != null && image.Length > 0)
             {

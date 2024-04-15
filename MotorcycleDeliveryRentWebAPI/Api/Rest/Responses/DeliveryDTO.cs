@@ -14,8 +14,6 @@ namespace MotorcycleDeliveryRentWebAPI.Api.Rest.Responses
         public decimal Price { get; set; }
         public DeliveryStatusEnum Status { get; set; }
 
-
-
         internal static async Task<List<DeliveryDTO>> Convert(Task<List<DeliveryModel>> task)
         {
             List<DeliveryModel> models = await task;

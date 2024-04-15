@@ -1,26 +1,22 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
+﻿using MotorcycleDeliveryRentWebAPI.Api.Rest.Models;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Requests;
 using MotorcycleDeliveryRentWebAPI.Api.Rest.Responses;
 using MotorcycleDeliveryRentWebAPI.Api.Validators;
 using MotorcycleDeliveryRentWebAPI.Domain.Repositories.Interfaces;
 using MotorcycleDeliveryRentWebAPI.Domain.Services.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace MotorcycleDeliveryRentWebAPI.Domain.Services
 {
     public class AdminService : IAdminService
     {
         private readonly IAdminRepository _repository;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<AdminModel> _logger;
+        private readonly ITokenService _tokenService;
+        private readonly ILogger<AdminService> _logger;
 
-        public AdminService(IAdminRepository adminRepository, IConfiguration configuration, ILogger<AdminModel> logger)
+        public AdminService(IAdminRepository adminRepository, ITokenService tokenService, ILogger<AdminService> logger)
         {
             _repository = adminRepository;
-            _configuration = configuration;
+            _tokenService = tokenService;
             _logger = logger;
         }
 
@@ -51,7 +47,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             return null;
         }
 
-        public async Task<AdminDTO> CreateAsync(LoginAdminDriverRequest request)
+        public async Task<AdminDTO> CreateAsync(AdminRequest request)
         {
             ValidatorAdminDriver.Password(request.Password);
             ValidatorAdminDriver.Email(request.Email);
@@ -63,12 +59,12 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
                 throw new Exception($"The E-mail must be unique, E-mail = {request.Email}");
             }
 
-            AdminModel model = LoginAdminDriverRequest.ConvertAdmin(request);
+            AdminModel model = AdminRequest.Convert(request);
             await _repository.CreateAsync(model);
             return await AdminDTO.Convert(model);
         }
 
-        public async Task<string> Login(LoginAdminDriverRequest request)
+        public async Task<TokenDTO> Login(LoginRequest request)
         {
             AdminModel model = await _repository.GetByEmail(request.Email);
 
@@ -81,7 +77,7 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             if (!BCrypt.Net.BCrypt.Verify(request.Password, model.Password))
                 throw new Exception("Wrong password");
 
-            return CreateToken(model);
+            return _tokenService.CreateToken(model.Id, model.Email, model.Rule);
         }
 
         public async Task<bool> UpdatePassword(string id, PasswordRequest request)
@@ -98,31 +94,6 @@ namespace MotorcycleDeliveryRentWebAPI.Domain.Services
             model = PasswordRequest.ConvertAdmin(model, request);
             await _repository.UpdateAsync(id, model);
             return true;
-        }
-
-        private string CreateToken(AdminModel model)
-        {
-            List<Claim> claims = new List<Claim> {
-                new Claim(ClaimTypes.NameIdentifier, model.Id),
-                new Claim(ClaimTypes.Email, model.Email),
-                new Claim(ClaimTypes.Role, "Admin")
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                _configuration.GetSection("AppSettings:Token").Value!));
-
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            var token = new JwtSecurityToken(
-                    claims: claims,
-                    expires: DateTime.Now.AddDays(1),
-                    signingCredentials: creds
-                );
-
-            var jwt = "Bearer " + new JwtSecurityTokenHandler().WriteToken(token);
-            _logger.LogDebug($"Admin with Id = {model} logged");
-
-            return jwt;
         }
 
         public Task<AdminModel> GetByIdModel(string id)
